@@ -2,6 +2,7 @@ package map.location;
 
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -10,9 +11,12 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
+        GoogleMap.OnMapLongClickListener
+{
 
     private GoogleMap mMap;
+    private double destinationLatitude, destinationLongitude;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,8 +26,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-    }
 
+    }
 
     /**
      * Manipulates the map once available.
@@ -42,5 +46,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng sydney = new LatLng(-34, 151);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+
+        // Asetetaan pitkälle painallukselle kuuntelija
+        mMap.setOnMapLongClickListener(this);
+    }
+
+    // Otetaan painalluksen kohdan latitude ja longitude talteen
+    @Override
+    public void onMapLongClick(LatLng point)
+    {
+        destinationLatitude = point.latitude;
+        destinationLongitude = point.longitude;
+
+        Toast.makeText(MapsActivity.this, "Point latitude: " + point.latitude +
+        " Point longitude: " + point.longitude, Toast.LENGTH_LONG).show();
+
+        // Lisätään merkki todentamaan toimivuutta... ehkä muuta käyttöä jälkeenpäin
+        MarkerOptions marker = new MarkerOptions()
+                .position(point); // .title(point.toString());
+        mMap.addMarker(marker);
+
+
     }
 }
