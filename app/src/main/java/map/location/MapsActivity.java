@@ -1,7 +1,9 @@
 package map.location;
 
+import android.location.Location;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -9,13 +11,16 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
-        GoogleMap.OnMapLongClickListener
+        GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerDragListener
 {
 
     private GoogleMap mMap;
+    MarkerOptions markerOptions;
+    Marker marker;
     private double destinationLatitude, destinationLongitude;
 
     @Override
@@ -26,7 +31,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
     }
 
     /**
@@ -39,7 +43,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * installed Google Play services and returned to the app.
      */
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(GoogleMap googleMap)
+    {
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
@@ -47,11 +52,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
 
-        // Asetetaan pitkälle painallukselle kuuntelija
+        // set listeners for long click and marker drag
         mMap.setOnMapLongClickListener(this);
+        mMap.setOnMarkerDragListener(this);
     }
 
-    // Otetaan painalluksen kohdan latitude ja longitude talteen
+    // Save lat and lng for later use
     @Override
     public void onMapLongClick(LatLng point)
     {
@@ -61,11 +67,35 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Toast.makeText(MapsActivity.this, "Point latitude: " + point.latitude +
         " Point longitude: " + point.longitude, Toast.LENGTH_LONG).show();
 
-        // Lisätään merkki todentamaan toimivuutta... ehkä muuta käyttöä jälkeenpäin
-        MarkerOptions marker = new MarkerOptions()
-                .position(point); // .title(point.toString());
-        mMap.addMarker(marker);
-
+        if (markerOptions != null)
+        {
+            marker.setPosition(point);
+        }
+        else
+        {
+            markerOptions = new MarkerOptions()
+                    .position(point).draggable(true).title("Custom marker");
+            marker = mMap.addMarker(markerOptions);
+        }
 
     }
+//region Marker Drag
+
+    @Override
+    public void onMarkerDragStart(Marker marker) {
+
+    }
+
+    @Override
+    public void onMarkerDrag(Marker marker) {
+
+    }
+
+    @Override
+    public void onMarkerDragEnd(Marker marker)
+    {
+        Toast.makeText(MapsActivity.this, "Point latitude: " + marker.getPosition().latitude +
+                " Point longitude: " + marker.getPosition().longitude, Toast.LENGTH_LONG).show();
+    }
+//endregion
 }
