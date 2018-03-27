@@ -10,6 +10,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -19,6 +20,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 {
 
     private GoogleMap mMap;
+    Location ownLoc;
     MarkerOptions markerOptions;
     Marker marker;
     private double destinationLatitude, destinationLongitude;
@@ -47,10 +49,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     {
         mMap = googleMap;
 
-        // Add a marker in Sydney and move the camera
+        // Add a marker in Sydney and move the camera. Add marker colour with .icon
         LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney")
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+
+        ownLoc = new Location("");
+        ownLoc.setLatitude(-34);
+        ownLoc.setLongitude(151);
 
         // set listeners for long click and marker drag
         mMap.setOnMapLongClickListener(this);
@@ -67,9 +74,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Toast.makeText(MapsActivity.this, "Point latitude: " + point.latitude +
         " Point longitude: " + point.longitude, Toast.LENGTH_LONG).show();
 
+        // If no new markerOption has been made, made one on click. After that only move the marker
         if (markerOptions != null)
         {
             marker.setPosition(point);
+            Location destinationLocation = new Location("");
+            destinationLocation.setLatitude(destinationLatitude);
+            destinationLocation.setLongitude(destinationLongitude);
+            double distance = ownLoc.distanceTo(destinationLocation) / 1000 ;
+            distance = Math.round(distance);
+            Log.wtf("TAG", "Distance: " + distance + "km");
         }
         else
         {
@@ -94,6 +108,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMarkerDragEnd(Marker marker)
     {
+        // On final destination show new position
         Toast.makeText(MapsActivity.this, "Point latitude: " + marker.getPosition().latitude +
                 " Point longitude: " + marker.getPosition().longitude, Toast.LENGTH_LONG).show();
     }
