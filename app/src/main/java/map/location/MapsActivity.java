@@ -11,6 +11,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.Toast;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.PagerAdapter;
@@ -44,7 +46,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerDragListener, GoogleMap.OnMapClickListener
 {
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback{
+    Switch sw;
 
     public static final String TAG = MapsActivity.class.getSimpleName();
     private GoogleMap mMap;
@@ -52,7 +54,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Marker markerLong, markerShort;
     private double destinationLatitude, destinationLongitude;
     private CameraPosition mCameraPosition;
-    double distance;
 
     // The entry points to the Places API
     private PlaceDetectionClient mPlaceDetect;
@@ -63,6 +64,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Location mLastKnownLocation, markerLongLocation, markerShortLocation;
 
     double distance, p2pDistance;
+
+    boolean gpsMode;
 
     //A default location (Oulu) and default zoom when location permission in
     //not granted
@@ -85,7 +88,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
         }
 
+
         setContentView(R.layout.activity_maps);
+
+                sw = (Switch) findViewById(R.id.switch1);
+
+
+        sw.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if(b){
+                    gpsMode = true;
+                    if(markerShort != null)
+                        markerShort.setVisible(false);
+                }
+                else{
+                    gpsMode = false;
+
+                    if(markerShort != null)
+                        markerShort.setVisible(true);
+                }
+
+            }
+        });
 
         mPlaceDetect = Places.getPlaceDetectionClient(this, null);
         mGeoDataClient = Places.getGeoDataClient(this, null);
@@ -135,73 +160,51 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapLongClick(LatLng point)
     {
 
-        setDistance(point);
+        setDistanceLong(point);
 
         // If no new markerOption has been made, made one on click. After that only move the marker
         if (markerOptionsLong != null)
         {
-            // Distance from marker to marker
-            markerLongLocation = new Location(destinationLocation);
-            if (markerLongLocation != null && markerShortLocation != null)
-            {
-                p2pDistance = markerShortLocation.distanceTo(markerLongLocation) / 1000;
-                p2pDistance = (double) Math.round(p2pDistance * 100) / 100;
-                Log.wtf("TAG", "Distance p2p: " + p2pDistance + "km");
-            }
 
-            distance = mLastKnownLocation.distanceTo(destinationLocation) / 1000 ;
-            distance = (double) Math.round(distance * 100) / 100;
-            Log.wtf("TAG", "Distance: " + distance + "km");
-            marker.setPosition(point);
+            markerLong.setPosition(point);
 
-            setDistance(point);
+            setDistanceLong(point);
 
         }
         else
         {
             markerOptionsLong = new MarkerOptions()
-                    .position(point).draggable(true).title("Custom marker");
+                    .position(point).draggable(true);
             markerLong = mMap.addMarker(markerOptionsLong);
+
         }
     }
 
     @Override
     public void onMapClick(LatLng latLng) {
 
-        destinationLatitude = latLng.latitude;
-        destinationLongitude = latLng.longitude;
+        if(!gpsMode){
 
-        Toast.makeText(MapsActivity.this, "Point latitude: " + latLng.latitude +
-                " Point longitude: " + latLng.longitude, Toast.LENGTH_LONG).show();
 
-        // If no new markerOption has been made, made one on click. After that only move the marker
-        if (markerOptionsShort != null)
-        {
-            markerShort.setPosition(latLng);
-            Location destinationLocation = new Location("");
-            destinationLocation.setLatitude(destinationLatitude);
-            destinationLocation.setLongitude(destinationLongitude);
-            double distance = mLastKnownLocation.distanceTo(destinationLocation) / 1000 ;
-            distance = (double) Math.round(distance * 100) / 100;
-            Log.wtf("TAG", "Distance: " + distance + "km");
-
-            // Distance from marker to marker
-            markerShortLocation = new Location(destinationLocation);
-            if (markerLongLocation != null && markerShortLocation != null)
+            // If no new markerOption has been made, made one on click. After that only move the marker
+            if (markerOptionsShort != null)
             {
-                p2pDistance = markerLongLocation.distanceTo(markerShortLocation) / 1000;
-                p2pDistance = (double) Math.round(p2pDistance * 100) / 100;
-                Log.wtf("TAG", "Distance p2p: " + p2pDistance + "km");
+                markerShort.setPosition(latLng);
+                setDistanceShort(latLng);
+
+
+            }
+            else
+            {
+                markerOptionsShort = new MarkerOptions()
+                        .position(latLng).draggable(true).title("Custom marker")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                markerShort = mMap.addMarker(markerOptionsShort);
             }
 
         }
-        else
-        {
-            markerOptionsShort = new MarkerOptions()
-                    .position(latLng).draggable(true).title("Custom marker")
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
-            markerShort = mMap.addMarker(markerOptionsShort);
-        }
+
+
     }
 
 //region Marker Drag
@@ -219,22 +222,59 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMarkerDragEnd(Marker marker)
     {
-        // On final destination show new position
-        setDistance(marker.getPosition());
+        // On final destination show new position-
+        if(marker.getId().equals(markerLong.getId()))
+            setDistanceLong(marker.getPosition());
+        else if( markerShort != null && marker.getId().equals(markerShort.getId()) )
+            setDistanceShort(marker.getPosition());
     }
 //endregion
 
+    private void setDistanceShort(LatLng latLng){
 
-    private void setDistance(LatLng point){
+        destinationLatitude = latLng.latitude;
+        destinationLongitude = latLng.longitude;
+
+        markerShortLocation = new Location("");
+        markerShortLocation.setLatitude(destinationLatitude);
+        markerShortLocation.setLongitude(destinationLongitude);
+
+        // Distance from marker to marker
+        if (markerLongLocation != null && markerShortLocation != null)
+        {
+            p2pDistance = markerLongLocation.distanceTo(markerShortLocation) / 1000;
+            p2pDistance = (double) Math.round(p2pDistance * 100) / 100;
+            Toast.makeText(MapsActivity.this, "Etäisyys linnuntietä p2p: " + p2pDistance + " km", Toast.LENGTH_LONG).show();
+        }
+
+    }
+
+    private void setDistanceLong(LatLng point){
 
         destinationLatitude = point.latitude;
         destinationLongitude = point.longitude;
         Location destinationLocation = new Location("");
         destinationLocation.setLatitude(destinationLatitude);
         destinationLocation.setLongitude(destinationLongitude);
-        distance = mLastKnownLocation.distanceTo(destinationLocation) / 1000 ;
-        distance = (double) Math.round(distance * 100) / 100;
-        Toast.makeText(MapsActivity.this, "Etäisyys linnuntietä: " + distance, Toast.LENGTH_LONG).show();
+        markerLongLocation = new Location(destinationLocation);
+
+        if(gpsMode && mLastKnownLocation != null){
+            distance = mLastKnownLocation.distanceTo(destinationLocation) / 1000 ;
+            distance = (double) Math.round(distance * 100) / 100;
+            Toast.makeText(MapsActivity.this, "Etäisyys linnuntietä: " + distance +" km", Toast.LENGTH_LONG).show();
+        }else{
+            // Distance from marker to marker
+
+            if (markerLongLocation != null && markerShortLocation != null)
+            {
+                p2pDistance = markerShortLocation.distanceTo(markerLongLocation) / 1000;
+                p2pDistance = (double) Math.round(p2pDistance * 100) / 100;
+                Toast.makeText(MapsActivity.this, "Etäisyys linnuntietä p2p: " + p2pDistance + " km", Toast.LENGTH_LONG).show();
+            }
+        }
+
+
+
 
     }
 
