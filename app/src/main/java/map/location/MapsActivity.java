@@ -44,7 +44,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerDragListener
 {
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback{
 
     public static final String TAG = MapsActivity.class.getSimpleName();
     private GoogleMap mMap;
@@ -148,9 +147,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Location destinationLocation = new Location("");
             destinationLocation.setLatitude(destinationLatitude);
             destinationLocation.setLongitude(destinationLongitude);
-            double distance = ownLoc.distanceTo(destinationLocation) / 1000 ;
-            distance = (double) Math.round(distance * 100) / 100;
-            Log.wtf("TAG", "Distance: " + distance + "km");
+//            double distance = ownLoc.distanceTo(destinationLocation) / 1000 ;
+//            distance = (double) Math.round(distance * 100) / 100;
+//            Log.wtf("TAG", "Distance: " + distance + "km");
         }
         else
         {
