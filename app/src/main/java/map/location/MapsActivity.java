@@ -41,15 +41,13 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
-        GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerDragListener
+        GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerDragListener, GoogleMap.OnMapClickListener
 {
-
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback{
 
     public static final String TAG = MapsActivity.class.getSimpleName();
     private GoogleMap mMap;
-    MarkerOptions markerOptions;
-    Marker marker;
+    MarkerOptions markerOptionsLong, markerOptionsShort;
+    Marker markerLong, markerShort;
     private double destinationLatitude, destinationLongitude;
     private CameraPosition mCameraPosition;
 
@@ -59,7 +57,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     //The entry point to the Fused Location Provider.
     private FusedLocationProviderClient mfFusedLoc;
-    private Location mLastKnownLocation;
+    private Location mLastKnownLocation, markerLongLocation, markerShortLocation;
+
+    double distance, p2pDistance;
 
     //A default location (Oulu) and default zoom when location permission in
     //not granted
@@ -125,6 +125,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // set listeners for long click and marker drag
         mMap.setOnMapLongClickListener(this);
         mMap.setOnMarkerDragListener(this);
+        mMap.setOnMapClickListener(this);
+
         getLocationPermission();
         updateLocationUI();
 
@@ -142,24 +144,73 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         " Point longitude: " + point.longitude, Toast.LENGTH_LONG).show();
 
         // If no new markerOption has been made, made one on click. After that only move the marker
-        if (markerOptions != null)
+        if (markerOptionsLong != null)
         {
-            marker.setPosition(point);
+            markerLong.setPosition(point);
             Location destinationLocation = new Location("");
             destinationLocation.setLatitude(destinationLatitude);
             destinationLocation.setLongitude(destinationLongitude);
-            double distance = ownLoc.distanceTo(destinationLocation) / 1000 ;
+            distance = mLastKnownLocation.distanceTo(destinationLocation) / 1000 ;
             distance = (double) Math.round(distance * 100) / 100;
             Log.wtf("TAG", "Distance: " + distance + "km");
+
+            // Distance from marker to marker
+            markerLongLocation = new Location(destinationLocation);
+            if (markerLongLocation != null && markerShortLocation != null)
+            {
+                p2pDistance = markerShortLocation.distanceTo(markerLongLocation) / 1000;
+                p2pDistance = (double) Math.round(p2pDistance * 100) / 100;
+                Log.wtf("TAG", "Distance p2p: " + p2pDistance + "km");
+            }
+
         }
         else
         {
-            markerOptions = new MarkerOptions()
+            markerOptionsLong = new MarkerOptions()
                     .position(point).draggable(true).title("Custom marker");
-            marker = mMap.addMarker(markerOptions);
+            markerLong = mMap.addMarker(markerOptionsLong);
         }
-
     }
+
+    @Override
+    public void onMapClick(LatLng latLng) {
+
+        destinationLatitude = latLng.latitude;
+        destinationLongitude = latLng.longitude;
+
+        Toast.makeText(MapsActivity.this, "Point latitude: " + latLng.latitude +
+                " Point longitude: " + latLng.longitude, Toast.LENGTH_LONG).show();
+
+        // If no new markerOption has been made, made one on click. After that only move the marker
+        if (markerOptionsShort != null)
+        {
+            markerShort.setPosition(latLng);
+            Location destinationLocation = new Location("");
+            destinationLocation.setLatitude(destinationLatitude);
+            destinationLocation.setLongitude(destinationLongitude);
+            double distance = mLastKnownLocation.distanceTo(destinationLocation) / 1000 ;
+            distance = (double) Math.round(distance * 100) / 100;
+            Log.wtf("TAG", "Distance: " + distance + "km");
+
+            // Distance from marker to marker
+            markerShortLocation = new Location(destinationLocation);
+            if (markerLongLocation != null && markerShortLocation != null)
+            {
+                p2pDistance = markerLongLocation.distanceTo(markerShortLocation) / 1000;
+                p2pDistance = (double) Math.round(p2pDistance * 100) / 100;
+                Log.wtf("TAG", "Distance p2p: " + p2pDistance + "km");
+            }
+
+        }
+        else
+        {
+            markerOptionsShort = new MarkerOptions()
+                    .position(latLng).draggable(true).title("Custom marker")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+            markerShort = mMap.addMarker(markerOptionsShort);
+        }
+    }
+
 //region Marker Drag
 
     @Override
