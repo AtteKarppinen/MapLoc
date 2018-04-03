@@ -51,6 +51,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Marker marker;
     private double destinationLatitude, destinationLongitude;
     private CameraPosition mCameraPosition;
+    double distance;
 
     // The entry points to the Places API
     private PlaceDetectionClient mPlaceDetect;
@@ -67,12 +68,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted = false;
 
-    //used for selecting the current place
-//    private String[] mLikelyPlaceNames;
-//    private String[] mLikelyPlaceAddress;
-//    private String[] mLikelyPlaceAttributions;
-//    private LatLng[] mLikelyPlaceLatLngs;
-//    private static final int M_MAX_ENTRIES = 5;
 
     private static final String KEY_CAMERA_POSITION = "camera_position";
     private static final String KEY_LOCATION = "location";
@@ -134,22 +129,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapLongClick(LatLng point)
     {
-        destinationLatitude = point.latitude;
-        destinationLongitude = point.longitude;
 
-        Toast.makeText(MapsActivity.this, "Point latitude: " + point.latitude +
-        " Point longitude: " + point.longitude, Toast.LENGTH_LONG).show();
+        setDistance(point);
 
         // If no new markerOption has been made, made one on click. After that only move the marker
         if (markerOptions != null)
         {
             marker.setPosition(point);
-            Location destinationLocation = new Location("");
-            destinationLocation.setLatitude(destinationLatitude);
-            destinationLocation.setLongitude(destinationLongitude);
-//            double distance = ownLoc.distanceTo(destinationLocation) / 1000 ;
-//            distance = (double) Math.round(distance * 100) / 100;
-//            Log.wtf("TAG", "Distance: " + distance + "km");
+
+            setDistance(point);
+
         }
         else
         {
@@ -175,11 +164,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMarkerDragEnd(Marker marker)
     {
         // On final destination show new position
-        Toast.makeText(MapsActivity.this, "Point latitude: " + marker.getPosition().latitude +
-                " Point longitude: " + marker.getPosition().longitude, Toast.LENGTH_LONG).show();
+        setDistance(marker.getPosition());
     }
 //endregion
 
+
+    private void setDistance(LatLng point){
+
+        destinationLatitude = point.latitude;
+        destinationLongitude = point.longitude;
+        Location destinationLocation = new Location("");
+        destinationLocation.setLatitude(destinationLatitude);
+        destinationLocation.setLongitude(destinationLongitude);
+        distance = mLastKnownLocation.distanceTo(destinationLocation) / 1000 ;
+        distance = (double) Math.round(distance * 100) / 100;
+        Toast.makeText(MapsActivity.this, "Etäisyys linnuntietä: " + distance, Toast.LENGTH_LONG).show();
+
+    }
 
     private void getLocationPermission(){
         if(ContextCompat.checkSelfPermission(this.getApplicationContext(),
@@ -256,98 +257,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-//    private void showCurrentPlace(){
-//        if(mMap == null){
-//            return;
-//        }
-//
-//        if(mLocationPermissionGranted) {
-//            @SuppressWarnings("MissingPermission")
-//                    final Task<PlaceLikelihoodBufferResponse> placeResult =
-//                    mPlaceDetect.getCurrentPlace(null);
-//            placeResult.addOnCompleteListener(new OnCompleteListener<PlaceLikelihoodBufferResponse>() {
-//                @Override
-//                public void onComplete(@NonNull Task<PlaceLikelihoodBufferResponse> task) {
-//                    if(task.isSuccessful() && task.getResult() != null) {
-//                        PlaceLikelihoodBufferResponse likelyPlaces = task.getResult();
-//
-//                        int count;
-//                        if(likelyPlaces.getCount() < M_MAX_ENTRIES) {
-//                            count = likelyPlaces.getCount();
-//                        }else
-//                        {
-//                            count = M_MAX_ENTRIES;
-//                        }
-//
-//                        int i = 0;
-//                        mLikelyPlaceNames = new String[count];
-//                        mLikelyPlaceAddress = new String[count];
-//                        mLikelyPlaceAttributions = new String[count];
-//                        mLikelyPlaceLatLngs = new LatLng[count];
-//
-//                        for(PlaceLikelihood placeLikelihood : likelyPlaces){
-//                            //build a list of likely places to show the user
-//                            mLikelyPlaceNames[i] = (String) placeLikelihood.getPlace().getName();
-//                            mLikelyPlaceAddress[i] = (String) placeLikelihood.getPlace()
-//                                    .getAddress();
-//                            mLikelyPlaceAttributions[i] = (String) placeLikelihood.getPlace()
-//                                    .getAttributions();
-//                            mLikelyPlaceLatLngs[i] = placeLikelihood.getPlace().getLatLng();
-//
-//                            i++;
-//                            if(i > (count - 1))
-//                                break;
-//                        }
-//
-//                        //release the place likehood buffer to avoid memory leaks
-//                        likelyPlaces.release();
-//                        openPlacesDialog();
-//
-//                } else {
-//                        Log.e(TAG, "Excepition: %s", task.getException());
-//                    }
-//
-//
-//
-//            }
-//            });
-//        } else {
-//            Log.i(TAG, "The user did not granted permission");
-//
-//            mMap.addMarker(new MarkerOptions()
-//            .title(getString(R.string.default_info_title))
-//            .position(mDefaultLocation)
-//            .snippet(getString(R.string.default_info_snippet)));
-//
-//            getLocationPermission();
-//        }
-//    }
-//
-//    private void openPlacesDialog(){
-//        DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
-//            @Override
-//            public void onClick(DialogInterface dialogInterface, int i) {
-//                LatLng markerLatLng = mLikelyPlaceLatLngs[i];
-//                String markerSnippet = mLikelyPlaceAddress[i];
-//
-//                if(mLikelyPlaceAttributions[i] != null){
-//                    markerSnippet = markerSnippet + "\n" + mLikelyPlaceAttributions[i];
-//                }
-//
-//                mMap.addMarker(new MarkerOptions()
-//                .title(mLikelyPlaceNames[i])
-//                .position(markerLatLng)
-//                .snippet(markerSnippet));
-//
-//                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(markerLatLng, DEFAULT_ZOOM));
-//            }
-//        };
-//
-//        AlertDialog dialog = new AlertDialog.Builder(this)
-//                .setTitle(R.string.pick_place)
-//                .setItems(mLikelyPlaceNames, listener)
-//                .show();
-//    }
+
 
 
 }
