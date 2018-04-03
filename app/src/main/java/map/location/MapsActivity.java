@@ -90,8 +90,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         setContentView(R.layout.activity_maps);
-
-                sw = (Switch) findViewById(R.id.switch1);
+        sw = (Switch) findViewById(R.id.switch1);
 
 
         sw.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -108,7 +107,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     if(markerShort != null)
                         markerShort.setVisible(true);
                 }
-
             }
         });
 
@@ -120,7 +118,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
     }
 
     /**
@@ -159,24 +156,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapLongClick(LatLng point)
     {
-
         setDistanceLong(point);
 
         // If no new markerOption has been made, made one on click. After that only move the marker
         if (markerOptionsLong != null)
         {
-
             markerLong.setPosition(point);
-
             setDistanceLong(point);
-
         }
         else
         {
             markerOptionsLong = new MarkerOptions()
                     .position(point).draggable(true);
             markerLong = mMap.addMarker(markerOptionsLong);
-
         }
     }
 
@@ -185,14 +177,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         if(!gpsMode){
 
-
             // If no new markerOption has been made, made one on click. After that only move the marker
             if (markerOptionsShort != null)
             {
                 markerShort.setPosition(latLng);
                 setDistanceShort(latLng);
-
-
             }
             else
             {
@@ -201,10 +190,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
                 markerShort = mMap.addMarker(markerOptionsShort);
             }
-
         }
-
-
     }
 
 //region Marker Drag
@@ -246,7 +232,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             p2pDistance = (double) Math.round(p2pDistance * 100) / 100;
             Toast.makeText(MapsActivity.this, "Etäisyys linnuntietä p2p: " + p2pDistance + " km", Toast.LENGTH_LONG).show();
         }
-
     }
 
     private void setDistanceLong(LatLng point){
@@ -262,7 +247,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             distance = mLastKnownLocation.distanceTo(destinationLocation) / 1000 ;
             distance = (double) Math.round(distance * 100) / 100;
             Toast.makeText(MapsActivity.this, "Etäisyys linnuntietä: " + distance +" km", Toast.LENGTH_LONG).show();
-        }else{
+        } else {
             // Distance from marker to marker
 
             if (markerLongLocation != null && markerShortLocation != null)
@@ -272,10 +257,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Toast.makeText(MapsActivity.this, "Etäisyys linnuntietä p2p: " + p2pDistance + " km", Toast.LENGTH_LONG).show();
             }
         }
-
-
-
-
     }
 
     private void getLocationPermission(){
