@@ -82,7 +82,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             destinationLocation.setLatitude(destinationLatitude);
             destinationLocation.setLongitude(destinationLongitude);
             double distance = ownLoc.distanceTo(destinationLocation) / 1000 ;
-            distance = Math.round(distance);
+            distance = (double) Math.round(distance * 100) / 100;
             Log.wtf("TAG", "Distance: " + distance + "km");
         }
         else
